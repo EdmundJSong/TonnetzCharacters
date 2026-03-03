@@ -2,14 +2,17 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>TONNETZ</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:#0a0a0a;color:#c8c0b4;font-family:"SF Mono","Fira Code","Courier New",monospace;display:flex;flex-direction:column;align-items:center;min-height:100vh;user-select:none;-webkit-user-select:none;overflow-x:hidden}
-h1{font-size:clamp(15px,3vw,20px);font-weight:300;letter-spacing:0.3em;color:#706860;padding:14px 16px 6px;text-align:center}
-.row{display:flex;gap:4px;padding:4px 10px;flex-wrap:wrap;justify-content:center;align-items:center;max-width:1000px;width:100%}
-.row2{display:flex;gap:4px;padding:3px 10px 6px;flex-wrap:wrap;justify-content:center;align-items:center;max-width:1000px;width:100%;min-height:34px}
+body{background:#0a0a0a;color:#c8c0b4;font-family:"SF Mono","Fira Code","Courier New",monospace;display:flex;flex-direction:column;align-items:center;min-height:100vh;min-height:100dvh;user-select:none;-webkit-user-select:none;overflow:hidden}
+h1{font-size:clamp(15px,3vw,20px);font-weight:300;letter-spacing:0.3em;color:#706860;padding:10px 16px 4px;text-align:center}
+
+/* desktop controls */
+.drow{display:flex;gap:4px;padding:4px 10px;flex-wrap:wrap;justify-content:center;align-items:center;max-width:1000px;width:100%}
+.drow2{display:flex;gap:4px;padding:3px 10px 4px;flex-wrap:wrap;justify-content:center;align-items:center;max-width:1000px;width:100%;min-height:34px}
+
 button{border:none;border-radius:5px;font-family:inherit;cursor:pointer;transition:all 0.15s;padding:5px 10px;font-size:14px;background:#1e1e1e;color:#706860;-webkit-tap-highlight-color:transparent}
 button:active{transform:scale(0.95)}
 button.on{background:#d4912a;color:#0a0a0a}
@@ -17,16 +20,42 @@ button.on{background:#d4912a;color:#0a0a0a}
 select{border:none;border-radius:5px;font-family:inherit;cursor:pointer;padding:5px 7px;font-size:12px;background:#1e1e1e;color:#706860;outline:none;-webkit-appearance:none;appearance:none}
 input[type=range]{width:54px;accent-color:#d4912a;cursor:pointer}
 input[type=text]{width:130px;height:30px;text-align:center;font-size:17px;font-family:"Noto Sans SC","Noto Sans JP","Noto Sans KR",sans-serif;border:1px solid #706860;border-radius:5px;background:#1e1e1e;color:#c8c0b4;outline:none;caret-color:#d4912a}
-.cvwrap{width:100%;max-width:1000px;padding:0 8px;touch-action:none}
-canvas{border-radius:6px;border:1px solid rgba(255,255,255,0.06);display:block;margin:0 auto}
-.pitches{width:100%;max-width:1000px;padding:8px 16px;display:flex;align-items:center;justify-content:center;gap:5px;flex-wrap:wrap;min-height:28px}
-.pip{padding:2px 9px;background:rgba(212,145,42,0.25);color:#d4912a;border-radius:10px;font-size:11px;font-weight:bold;letter-spacing:0.05em}
+
+.cvwrap{width:100%;max-width:1000px;padding:0 8px;touch-action:none;flex:1;display:flex;align-items:center;justify-content:center}
+canvas{border-radius:6px;border:1px solid rgba(255,255,255,0.06);display:block}
+
+/* tone row */
+.tonerow{width:100%;max-width:1000px;padding:6px 12px;display:flex;align-items:center;justify-content:center;gap:4px;flex-wrap:nowrap;min-height:40px}
+.trpill{padding:4px 10px;background:rgba(212,145,42,0.25);color:#d4912a;border-radius:8px;font-size:16px;font-weight:bold;letter-spacing:0.05em;min-width:28px;text-align:center}
+.trbtn{padding:4px 10px;font-size:16px;flex-shrink:0}
+
+/* mobile bottom sheet */
+.sheet-toggle{display:none;position:fixed;bottom:12px;right:12px;z-index:100;width:48px;height:48px;border-radius:50%;font-size:20px;background:#d4912a;color:#0a0a0a;align-items:center;justify-content:center;box-shadow:0 2px 12px rgba(0,0,0,0.5)}
+.sheet{display:none;position:fixed;bottom:0;left:0;right:0;z-index:99;background:#161616;border-top-left-radius:16px;border-top-right-radius:16px;padding:16px;max-height:70vh;overflow-y:auto;transform:translateY(100%);transition:transform 0.3s ease}
+.sheet.open{transform:translateY(0)}
+.sheet-handle{width:40px;height:4px;background:#444;border-radius:2px;margin:0 auto 16px}
+.sheet .s-row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;align-items:center;margin-bottom:12px}
+.sheet button{padding:10px 16px;font-size:16px;min-height:44px;min-width:44px}
+.sheet select{padding:10px 12px;font-size:16px;min-height:44px}
+.sheet input[type=range]{width:100%;max-width:200px;height:32px}
+.sheet input[type=text]{width:160px;height:44px;font-size:20px}
+.sheet-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.4);z-index:98}
+
+@media(max-width:680px){
+  .drow,.drow2{display:none !important}
+  .sheet-toggle{display:flex}
+  h1{padding:6px 16px 2px;font-size:14px}
+  .tonerow{padding:4px 8px}
+  .trpill{font-size:14px;padding:3px 7px}
+}
 </style>
 </head>
 <body>
+
 <h1>TONNETZ</h1>
 
-<div class="row" id="row1">
+<!-- Desktop controls row 1 -->
+<div class="drow" id="drow1">
   <div class="grp">
     <button id="mType" class="on" onclick="setMode('type')">T</button>
     <button id="mDraw" onclick="setMode('draw')">&#x270E;</button>
@@ -42,23 +71,60 @@ canvas{border-radius:6px;border:1px solid rgba(255,255,255,0.06);display:block;m
   </div>
 </div>
 
-<div class="row2" id="row2"></div>
+<!-- Desktop controls row 2 -->
+<div class="drow2" id="drow2"></div>
 
 <div class="cvwrap" id="cvwrap">
   <canvas id="cv"></canvas>
 </div>
 
-<div class="pitches" id="pitchDisp"></div>
+<!-- Tone row display -->
+<div class="tonerow" id="tonerow"></div>
+
+<!-- Mobile: FAB toggle -->
+<button class="sheet-toggle" id="sheetToggle" onclick="toggleSheet()">&#x2699;</button>
+<div class="sheet-overlay" id="sheetOverlay" onclick="toggleSheet()"></div>
+
+<!-- Mobile bottom sheet -->
+<div class="sheet" id="sheet">
+  <div class="sheet-handle"></div>
+  <div class="s-row">
+    <div class="grp">
+      <button id="mTypeM" class="on" onclick="setMode('type')">T</button>
+      <button id="mDrawM" onclick="setMode('draw')">&#x270E;</button>
+    </div>
+  </div>
+  <div class="s-row" id="sheetMode"></div>
+  <div class="s-row" id="sheetTcRow">
+    <select id="tcSelM" onchange="setTc(parseInt(this.value))"></select>
+  </div>
+  <div class="s-row">
+    <button id="pcBtnM" onclick="togglePc()">#</button>
+    <button onclick="resetView()">&#x21BA;</button>
+    <button onclick="nudge()">&#x2AF1;</button>
+  </div>
+  <div class="s-row">
+    <span style="color:#706860;font-size:12px">Skew</span>
+    <input type="range" id="skewSliderM" min="-1.5" max="1.5" step="0.05" value="0" oninput="setSkew(parseFloat(this.value))">
+  </div>
+  <div class="s-row">
+    <div class="grp">
+      <button id="waveBtnM" onclick="cycleWave()">&#x223F;</button>
+      <button id="playBtnM" onclick="doPlay()">&#x25B6;</button>
+    </div>
+  </div>
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
 <script>
 const P_DISP=["C","C\u266f","D","D\u266f","E","F","F\u266f","G","G\u266f","A","A\u266f","B"];
 const P_SYN=["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
 const WAVES=[["sine","\u223f"],["square","\u25a1"],["sawtooth","\u25b3"]];
-const BG="#0a0a0a",BG3="#1e1e1e",PAPER="#f0eadc",AMBER="#d4912a",AMBER_DIM="rgba(212,145,42,0.25)",AMBER_GLOW="rgba(212,145,42,0.15)",INK="#2a1f14",INK3="#9a8a78",GRID_COL="rgba(42,31,20,0.22)",NODE_IN="rgba(42,31,20,0.7)",NODE_OFF="rgba(42,31,20,0.18)";
+const PAPER="#f0eadc",AMBER="#d4912a",AMBER_GLOW="rgba(212,145,42,0.15)",INK="#2a1f14",INK3="#9a8a78";
+const GRID_COL="rgba(42,31,20,0.22)",NODE_IN="rgba(42,31,20,0.7)",NODE_OFF="rgba(42,31,20,0.18)";
 
 const cv=document.getElementById("cv"),ctx=cv.getContext("2d"),wrap_el=document.getElementById("cvwrap");
-const COLS=9,ROWS=6,PAD=40,NR=13,BMP=220;
+const PAD=40,NR=13,BMP=220;
 
 let W=800,H=600,mode="type",tc=0,pc=false,skew=0,waveIdx=0;
 let typeCh="",typePos={x:400,y:300},typeSc=0.45,typeRot=0;
@@ -68,32 +134,39 @@ let dragging=false,dragStart=null;
 let showRot=false,showSc=false,showSkew=false;
 let rotTm,scTm,skTm;
 let isComposing=false;
+let sheetOpen=false;
+let toneRowOrder=null; // null = chromatic, array = custom
 
 function cPos(){return mode==="type"?typePos:drawPos;}
 function cSc(){return mode==="type"?typeSc:drawSc;}
 function cRot(){return mode==="type"?typeRot:drawRot;}
 function setCPos(p){if(mode==="type")typePos=p;else drawPos=p;}
-function setCSc(v){if(mode==="type")typeSc=v;else drawSc=v;}
-function setCRot(v){if(mode==="type")typeRot=v;else drawRot=v;}
-
 function wrap(v,mn,mx){const r=mx-mn;let o=v;while(o<mn)o+=r;while(o>mx)o-=r;return o;}
 
+/* infinite grid generation */
 function genNodes(){
-  const ns=[],uw=W-PAD*2,uh=H-PAD*2,cs=uw/(COLS-1),rs=uh/(ROWS-1);
-  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
-    const xo=r%2===1?cs*0.5:0,so=r*skew*cs*0.5;
-    ns.push({x:PAD+c*cs+xo+so,y:PAD+(ROWS-1-r)*rs,pitch:((c*7)+(r*4)+tc)%12,col:c,row:r,id:r+"-"+c});
+  const ns=[],uw=W-PAD*2,uh=H-PAD*2,COLS=9,ROWS=6;
+  const cs=uw/(COLS-1),rs=uh/(ROWS-1);
+  const extraC=Math.ceil(PAD/cs)+3,extraR=Math.ceil(PAD/rs)+3;
+  for(let r=-extraR;r<ROWS+extraR;r++)for(let c=-extraC;c<COLS+extraC;c++){
+    const xo=((r%2)+2)%2===1?cs*0.5:0;
+    const so=r*skew*cs*0.5;
+    const x=PAD+c*cs+xo+so;
+    const y=PAD+(ROWS-1-r)*rs;
+    if(x<-cs*2||x>W+cs*2||y<-rs*2||y>H+rs*2)continue;
+    ns.push({x,y,pitch:(((c%12+12)%12*7)+((r%3+3)%3*4)+tc)%12,col:c,row:r,id:r+"-"+c});
   }return ns;
 }
 function genEdges(nodes){
   const es=[],mp={};nodes.forEach(n=>{mp[n.row+"-"+n.col]=n;});
-  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
-    const cu=mp[r+"-"+c];if(!cu)continue;
+  nodes.forEach(cu=>{
+    const r=cu.row,c=cu.col;
     const rt=mp[r+"-"+(c+1)];if(rt)es.push([cu,rt]);
-    if(r<ROWS-1){const od=r%2===1;
-      const ul=mp[(r+1)+"-"+(od?c:c-1)],ur=mp[(r+1)+"-"+(od?c+1:c)];
-      if(ul)es.push([cu,ul]);if(ur)es.push([cu,ur]);}
-  }return es;
+    const od=((r%2)+2)%2===1;
+    const ul=mp[(r+1)+"-"+(od?c:c-1)],ur=mp[(r+1)+"-"+(od?c+1:c)];
+    if(ul)es.push([cu,ul]);if(ur)es.push([cu,ur]);
+  });
+  return es;
 }
 
 function charBitmap(ch,sz){
@@ -217,37 +290,90 @@ function render(){
   if(showSkew){ctx.globalAlpha=0.8;ctx.fillText("skew "+Math.round(skew*100)/100,W/2,iy);}
   ctx.restore();
 
-  /* pitch pills */
-  const aP=[...new Set(nodes.filter(n=>aN.has(n.id)).map(n=>lbl(n.pitch)))];
-  document.getElementById("pitchDisp").innerHTML=aP.map(p=>'<span class="pip">'+p+'</span>').join("");
+  /* tone row */
+  renderToneRow(nodes);
+  updatePlayBtns();
+}
 
-  const pb=document.getElementById("playBtn");
-  if(pb){pb.className=aN.size>0?"on":"";pb.style.opacity=playing?"0.5":"1";}
+function renderToneRow(nodes){
+  const activePitches=[...new Set(nodes.filter(n=>aN.has(n.id)).map(n=>n.pitch))];
+  activePitches.sort((a,b)=>a-b); // chromatic order
+  let ordered;
+  if(toneRowOrder&&toneRowOrder.length===activePitches.length&&
+     toneRowOrder.every(p=>activePitches.includes(p))){
+    ordered=toneRowOrder;
+  }else{
+    ordered=activePitches;
+    toneRowOrder=null;
+  }
+  const el=document.getElementById("tonerow");
+  if(ordered.length===0){el.innerHTML="";return;}
+  let html=ordered.map(p=>'<span class="trpill">'+lbl(p)+'</span>').join("");
+  html+='<button class="trbtn" onclick="shuffleRow()" title="Shuffle">🎲</button>';
+  el.innerHTML=html;
+}
+
+function shuffleRow(){
+  const nodes=genNodes();
+  const activePitches=[...new Set(nodes.filter(n=>aN.has(n.id)).map(n=>n.pitch))];
+  if(activePitches.length<2)return;
+  const arr=[...activePitches];
+  for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}
+  toneRowOrder=arr;
+  renderToneRow(nodes);
+}
+
+function updatePlayBtns(){
+  const has=aN.size>0;
+  ["playBtn","playBtnM"].forEach(id=>{
+    const b=document.getElementById(id);
+    if(b){b.className=has?"on":"";b.style.opacity=playing?"0.5":"1";}
+  });
 }
 
 function update(){detect();render();}
 
-/* ── controls ── */
+/* controls */
 function setMode(m){
   mode=m;
-  document.getElementById("mType").className=m==="type"?"on":"";
-  document.getElementById("mDraw").className=m==="draw"?"on":"";
-  buildRow2();update();
+  ["mType","mTypeM"].forEach(id=>{const e=document.getElementById(id);if(e)e.className=m==="type"?"on":"";});
+  ["mDraw","mDrawM"].forEach(id=>{const e=document.getElementById(id);if(e)e.className=m==="draw"?"on":"";});
+  buildRow2();buildSheetMode();update();
 }
-function setTc(v){tc=v;update();}
-function togglePc(){pc=!pc;document.getElementById("pcBtn").className=pc?"on":"";update();}
-function setSkew(v){skew=v;showSkew=true;clearTimeout(skTm);skTm=setTimeout(()=>{showSkew=false;render();},800);update();}
-function cycleWave(){waveIdx=(waveIdx+1)%WAVES.length;document.getElementById("waveBtn").textContent=WAVES[waveIdx][1];}
+function setTc(v){
+  tc=v;
+  ["tcSel","tcSelM"].forEach(id=>{const e=document.getElementById(id);if(e)e.value=v;});
+  update();
+}
+function togglePc(){
+  pc=!pc;
+  ["pcBtn","pcBtnM"].forEach(id=>{const e=document.getElementById(id);if(e)e.className=pc?"on":"";});
+  /* hide/show tonal center */
+  const tcEl=document.getElementById("tcSel");if(tcEl)tcEl.style.display=pc?"none":"";
+  const tcRow=document.getElementById("sheetTcRow");if(tcRow)tcRow.style.display=pc?"none":"";
+  toneRowOrder=null;
+  update();
+}
+function setSkew(v){
+  skew=v;
+  ["skewSlider","skewSliderM"].forEach(id=>{const e=document.getElementById(id);if(e)e.value=v;});
+  showSkew=true;clearTimeout(skTm);skTm=setTimeout(()=>{showSkew=false;render();},800);update();
+}
+function cycleWave(){
+  waveIdx=(waveIdx+1)%WAVES.length;
+  ["waveBtn","waveBtnM"].forEach(id=>{const e=document.getElementById(id);if(e)e.textContent=WAVES[waveIdx][1];});
+}
 function resetView(){
   if(mode==="type"){typePos={x:W/2,y:H/2};typeSc=0.45;typeRot=0;}
   else{drawPos={x:W/2,y:H/2};drawSc=1.0;drawRot=0;}
-  skew=0;document.getElementById("skewSlider").value=0;
-  buildRow2();update();
+  skew=0;
+  ["skewSlider","skewSliderM"].forEach(id=>{const e=document.getElementById(id);if(e)e.value=0;});
+  buildRow2();buildSheetMode();update();
 }
 
 function nudge(){
-  const nodes=genNodes(),sz=BMP,curSize=getSize(),rot=cRot(),isTyped=mode==="type"&&!!typeCh;
-  const isDraw=mode==="draw"&&dPaths.length>0;
+  const nodes=genNodes(),sz=BMP,curSize=getSize(),rot=cRot();
+  const isTyped=mode==="type"&&!!typeCh,isDraw=mode==="draw"&&dPaths.length>0;
   let imgData;
   if(isTyped)imgData=charBitmap(typeCh,sz);
   else if(isDraw)imgData=drawBitmapFn(dPaths,W,H,sz,drawSc);
@@ -285,54 +411,98 @@ async function doPlay(){
   synth=new Tone.Synth({oscillator:{type:WAVES[waveIdx][0]},envelope:{attack:0.01,decay:1.2,sustain:0.1,release:1.5}}).toDestination();
   playing=true;render();
   const nodes=genNodes();
-  const al=nodes.filter(n=>aN.has(n.id)).sort((a,b)=>a.y-b.y||a.x-b.x);
-  const mnY=Math.min(...al.map(n=>n.y)),mxY=Math.max(...al.map(n=>n.y)),yR=mxY-mnY||1;
+  /* use tone row order if set, else chromatic */
+  const activePitches=[...new Set(nodes.filter(n=>aN.has(n.id)).map(n=>n.pitch))];
+  let ordered;
+  if(toneRowOrder&&toneRowOrder.length===activePitches.length)ordered=toneRowOrder;
+  else{activePitches.sort((a,b)=>a-b);ordered=activePitches;}
   const now=Tone.now(),sp=0.3;
-  al.forEach((nd,i)=>{const yN=1-(nd.y-mnY)/yR,oc=Math.floor(yN*2)+3;
-    try{synth.triggerAttackRelease(P_SYN[nd.pitch]+oc,"4n",now+i*sp);}catch(e){}});
-  setTimeout(()=>{playing=false;render();},al.length*sp*1000+500);
+  ordered.forEach((pitch,i)=>{
+    const oct=3+Math.floor(i/6);
+    try{synth.triggerAttackRelease(P_SYN[pitch]+oct,"4n",now+i*sp);}catch(e){}
+  });
+  setTimeout(()=>{playing=false;render();},ordered.length*sp*1000+500);
 }
 
-/* ── row 2 builder ── */
+/* desktop row 2 */
 function buildRow2(){
-  const r2=document.getElementById("row2");r2.innerHTML="";
+  const r2=document.getElementById("drow2");r2.innerHTML="";
   if(mode==="type"){
-    const inp=document.createElement("input");inp.type="text";inp.id="charInput";inp.value="";inp.placeholder="";inp.autocomplete="off";
+    const inp=document.createElement("input");inp.type="text";inp.id="charInput";inp.value=typeCh;inp.placeholder="";inp.autocomplete="off";
     inp.addEventListener("compositionstart",()=>{isComposing=true;});
-    inp.addEventListener("compositionend",e=>{isComposing=false;const v=e.target.value;if(v.length>0){typeCh=v.slice(-1);inp.value=typeCh;typePos={x:W/2,y:H/2};update();}});
-    inp.addEventListener("input",e=>{if(!isComposing){const v=e.target.value;if(v.length>0){typeCh=v.slice(-1);inp.value=typeCh;typePos={x:W/2,y:H/2};update();}}});
+    inp.addEventListener("compositionend",e=>{isComposing=false;const v=e.target.value;if(v.length>0){typeCh=v.slice(-1);inp.value=typeCh;typePos={x:W/2,y:H/2};toneRowOrder=null;update();}});
+    inp.addEventListener("input",e=>{if(!isComposing){const v=e.target.value;if(v.length>0){typeCh=v.slice(-1);inp.value=typeCh;typePos={x:W/2,y:H/2};toneRowOrder=null;update();}}});
     r2.appendChild(inp);
-
     const s1=document.createElement("input");s1.type="range";s1.min="0.15";s1.max="1.8";s1.step="0.02";s1.value=typeSc;
     s1.oninput=function(){typeSc=parseFloat(this.value);showSc=true;clearTimeout(scTm);scTm=setTimeout(()=>{showSc=false;render();},800);update();};
     r2.appendChild(s1);
-
-    const s2=document.createElement("input");s2.type="range";s2.min=""+(- Math.PI);s2.max=""+Math.PI;s2.step="0.02";s2.value=typeRot;
+    const s2=document.createElement("input");s2.type="range";s2.min=""+(-Math.PI);s2.max=""+Math.PI;s2.step="0.02";s2.value=typeRot;
     s2.oninput=function(){typeRot=parseFloat(this.value);showRot=true;clearTimeout(rotTm);rotTm=setTimeout(()=>{showRot=false;render();},800);update();};
     r2.appendChild(s2);
   }else{
-    const bClr=document.createElement("button");bClr.textContent="\u2715";bClr.onclick=()=>{dPaths=[];curPath=null;locked=false;drawSc=1.0;drawRot=0;drawPos={x:W/2,y:H/2};buildRow2();update();};
+    const bClr=document.createElement("button");bClr.textContent="\u2715";bClr.onclick=()=>{dPaths=[];curPath=null;locked=false;drawSc=1.0;drawRot=0;drawPos={x:W/2,y:H/2};toneRowOrder=null;buildRow2();update();};
     r2.appendChild(bClr);
-
     const bLock=document.createElement("button");bLock.textContent=locked?"🔒":"🔓";bLock.className=locked?"on":"";
-    bLock.onclick=()=>{locked=!locked;buildRow2();update();};
+    bLock.onclick=()=>{locked=!locked;buildRow2();buildSheetMode();update();};
     r2.appendChild(bLock);
-
     if(locked){
       const s1=document.createElement("input");s1.type="range";s1.min="0.3";s1.max="2.5";s1.step="0.02";s1.value=drawSc;
       s1.oninput=function(){drawSc=parseFloat(this.value);showSc=true;clearTimeout(scTm);scTm=setTimeout(()=>{showSc=false;render();},800);update();};
       r2.appendChild(s1);
-
-      const s2=document.createElement("input");s2.type="range";s2.min=""+(- Math.PI);s2.max=""+Math.PI;s2.step="0.02";s2.value=drawRot;
+      const s2=document.createElement("input");s2.type="range";s2.min=""+(-Math.PI);s2.max=""+Math.PI;s2.step="0.02";s2.value=drawRot;
       s2.oninput=function(){drawRot=parseFloat(this.value);showRot=true;clearTimeout(rotTm);rotTm=setTimeout(()=>{showRot=false;render();},800);update();};
       r2.appendChild(s2);
     }
   }
 }
 
-/* ── pointer ── */
-function gcp(e){const r=cv.getBoundingClientRect();const x=e.touches?e.touches[0].clientX:e.clientX;const y=e.touches?e.touches[0].clientY:e.clientY;return{x:x-r.left,y:y-r.top};}
+/* mobile sheet mode-specific */
+function buildSheetMode(){
+  const el=document.getElementById("sheetMode");el.innerHTML="";
+  if(mode==="type"){
+    const inp=document.createElement("input");inp.type="text";inp.value=typeCh;inp.placeholder="";inp.autocomplete="off";
+    inp.addEventListener("compositionstart",()=>{isComposing=true;});
+    inp.addEventListener("compositionend",e=>{isComposing=false;const v=e.target.value;if(v.length>0){typeCh=v.slice(-1);inp.value=typeCh;typePos={x:W/2,y:H/2};toneRowOrder=null;update();}});
+    inp.addEventListener("input",e=>{if(!isComposing){const v=e.target.value;if(v.length>0){typeCh=v.slice(-1);inp.value=typeCh;typePos={x:W/2,y:H/2};toneRowOrder=null;update();}}});
+    el.appendChild(inp);
+    const wrap2=document.createElement("div");wrap2.style.cssText="display:flex;flex-direction:column;gap:6px;width:100%;align-items:center";
+    const lbl1=document.createElement("span");lbl1.style.cssText="color:#706860;font-size:12px";lbl1.textContent="Size";
+    const s1=document.createElement("input");s1.type="range";s1.min="0.15";s1.max="1.8";s1.step="0.02";s1.value=typeSc;
+    s1.oninput=function(){typeSc=parseFloat(this.value);showSc=true;clearTimeout(scTm);scTm=setTimeout(()=>{showSc=false;render();},800);update();};
+    const lbl2=document.createElement("span");lbl2.style.cssText="color:#706860;font-size:12px";lbl2.textContent="Rotate";
+    const s2=document.createElement("input");s2.type="range";s2.min=""+(-Math.PI);s2.max=""+Math.PI;s2.step="0.02";s2.value=typeRot;
+    s2.oninput=function(){typeRot=parseFloat(this.value);showRot=true;clearTimeout(rotTm);rotTm=setTimeout(()=>{showRot=false;render();},800);update();};
+    wrap2.append(lbl1,s1,lbl2,s2);
+    el.appendChild(wrap2);
+  }else{
+    const bClr=document.createElement("button");bClr.textContent="\u2715";bClr.onclick=()=>{dPaths=[];curPath=null;locked=false;drawSc=1.0;drawRot=0;drawPos={x:W/2,y:H/2};toneRowOrder=null;buildRow2();buildSheetMode();update();};
+    el.appendChild(bClr);
+    const bLock=document.createElement("button");bLock.textContent=locked?"🔒":"🔓";bLock.className=locked?"on":"";
+    bLock.onclick=()=>{locked=!locked;buildRow2();buildSheetMode();update();};
+    el.appendChild(bLock);
+    if(locked){
+      const wrap2=document.createElement("div");wrap2.style.cssText="display:flex;flex-direction:column;gap:6px;width:100%;align-items:center";
+      const lbl1=document.createElement("span");lbl1.style.cssText="color:#706860;font-size:12px";lbl1.textContent="Size";
+      const s1=document.createElement("input");s1.type="range";s1.min="0.3";s1.max="2.5";s1.step="0.02";s1.value=drawSc;
+      s1.oninput=function(){drawSc=parseFloat(this.value);showSc=true;clearTimeout(scTm);scTm=setTimeout(()=>{showSc=false;render();},800);update();};
+      const lbl2=document.createElement("span");lbl2.style.cssText="color:#706860;font-size:12px";lbl2.textContent="Rotate";
+      const s2=document.createElement("input");s2.type="range";s2.min=""+(-Math.PI);s2.max=""+Math.PI;s2.step="0.02";s2.value=drawRot;
+      s2.oninput=function(){drawRot=parseFloat(this.value);showRot=true;clearTimeout(rotTm);rotTm=setTimeout(()=>{showRot=false;render();},800);update();};
+      wrap2.append(lbl1,s1,lbl2,s2);
+      el.appendChild(wrap2);
+    }
+  }
+}
 
+/* mobile sheet toggle */
+function toggleSheet(){
+  sheetOpen=!sheetOpen;
+  document.getElementById("sheet").className=sheetOpen?"sheet open":"sheet";
+  document.getElementById("sheetOverlay").style.display=sheetOpen?"block":"none";
+}
+
+/* pointer */
+function gcp(e){const r=cv.getBoundingClientRect();const x=e.touches?e.touches[0].clientX:e.clientX;const y=e.touches?e.touches[0].clientY:e.clientY;return{x:x-r.left,y:y-r.top};}
 cv.addEventListener("mousedown",pDown);cv.addEventListener("mousemove",pMove);cv.addEventListener("mouseup",pUp);cv.addEventListener("mouseleave",pUp);
 cv.addEventListener("touchstart",pDown,{passive:false});cv.addEventListener("touchmove",pMove,{passive:false});cv.addEventListener("touchend",pUp);
 
@@ -349,18 +519,24 @@ function pUp(){
   curPath=null;dragging=false;dragStart=null;update();
 }
 
-/* ── resize ── */
+/* resize */
 function resize(){
-  const r=wrap_el.getBoundingClientRect();W=Math.min(r.width,1000);H=Math.min(W*0.75,600);
-  typePos={x:W/2,y:H/2};drawPos={x:W/2,y:H/2};update();
+  const r=wrap_el.getBoundingClientRect();
+  const isMobile=window.innerWidth<=680;
+  W=Math.min(r.width-16, 1000);
+  H=isMobile?Math.min(window.innerHeight-120, W*1.1):Math.min(W*0.75,600);
+  cv.style.cursor=mode==="draw"&&!locked?"crosshair":"grab";
+  update();
 }
 window.addEventListener("resize",resize);
 
-/* ── init ── */
+/* init */
 (function init(){
-  const sel=document.getElementById("tcSel");
-  P_DISP.forEach((n,i)=>{const o=document.createElement("option");o.value=i;o.textContent=n;sel.appendChild(o);});
-  buildRow2();resize();
+  ["tcSel","tcSelM"].forEach(id=>{
+    const sel=document.getElementById(id);
+    P_DISP.forEach((n,i)=>{const o=document.createElement("option");o.value=i;o.textContent=n;sel.appendChild(o);});
+  });
+  buildRow2();buildSheetMode();resize();
 })();
 </script>
 </body>
