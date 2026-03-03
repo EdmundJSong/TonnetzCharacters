@@ -295,21 +295,23 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 0 4px;
-      height: 100%
+      padding: 0 2px;
+      height: 100%;
+      width: 32px;
+      flex-shrink: 0
     }
 
     .dens-slider-wrap input[type=range] {
-      writing-mode: vertical-lr;
-      direction: rtl;
-      width: 20px;
-      height: 100%;
-      max-height: 400px;
-      appearance: slider-vertical;
-      -webkit-appearance: slider-vertical;
+      width: 100%;
+      max-width: 400px;
+      transform: rotate(-90deg);
+      transform-origin: center center;
       accent-color: #d4912a;
       cursor: pointer;
-      touch-action: manipulation
+      touch-action: manipulation;
+      -webkit-appearance: none;
+      appearance: none;
+      background: transparent
     }
 
     /* bottom skew slider */
@@ -370,7 +372,7 @@
       display: none;
       position: fixed;
       bottom: 12px;
-      right: 12px;
+      left: 12px;
       z-index: 200;
       width: 50px;
       height: 50px;
@@ -493,7 +495,7 @@
       }
 
       .dens-slider-wrap input[type=range] {
-        max-height: 250px
+        max-width: 250px
       }
 
       .skew-slider-wrap {
@@ -538,7 +540,7 @@
   <div class="canvas-area">
     <div class="canvas-row">
       <canvas id="cv"></canvas>
-      <div class="dens-slider-wrap">
+      <div class="dens-slider-wrap" id="densWrap">
         <input type="range" id="densSlider" min="4" max="14" step="1" value="9"
           oninput="setDensity(parseInt(this.value))">
       </div>
@@ -598,7 +600,11 @@
     const GRID_COL = "rgba(42,31,20,0.22)", NODE_IN = "rgba(42,31,20,0.7)";
 
     const cv = document.getElementById("cv"), ctx = cv.getContext("2d");
-    const PAD = 30, BMP = 220;
+    const PAD = 30, BMP_BASE = 220;
+
+    /* aspect-ratio-aware bitmap dimensions */
+    function bmpW() { return W >= H ? BMP_BASE : Math.round(BMP_BASE * W / H); }
+    function bmpH() { return H >= W ? BMP_BASE : Math.round(BMP_BASE * H / W); }
 
     let W = 800, H = 600, mode = "type", tc = 0, pc = false, skew = 0, waveIdx = 0;
     let density = 9;
@@ -612,6 +618,9 @@
     let sheetOpen = false;
     let toneRowOrder = null;
     let canvasDisabled = false;
+    let touches = []; /* track active touches for pinch/rotate */
+    let pinchStartDist = null, pinchStartSc = null;
+    let pinchStartAngle = null, pinchStartRot = null;
 
     function cPos() { return mode === "type" ? typePos : drawPos; }
     function cSc() { return mode === "type" ? typeSc : drawSc; }
@@ -620,17 +629,20 @@
     function wrap(v, mn, mx) { const r = mx - mn; let o = v; while (o < mn) o += r; while (o > mx) o -= r; return o; }
 
     function getCols() { return density; }
-    function getRows() { return Math.max(3, Math.round(density * 0.67)); }
 
     function genNodes() {
-      const COLS = getCols(), ROWS = getRows();
-      const ns = [], uw = W - PAD * 2, uh = H - PAD * 2, cs = uw / Math.max(COLS - 1, 1), rs = uh / Math.max(ROWS - 1, 1);
-      const extraC = Math.ceil(PAD / cs) + 3, extraR = Math.ceil(PAD / rs) + 3;
-      for (let r = -extraR; r < ROWS + extraR; r++)for (let c = -extraC; c < COLS + extraC; c++) {
+      const COLS = getCols();
+      const ns = [], uw = W - PAD * 2;
+      const cs = uw / Math.max(COLS - 1, 1);
+      const rs = cs * Math.sqrt(3) / 2; /* equilateral triangles */
+      const visRows = Math.ceil((H + PAD * 2) / rs) + 2;
+      const extraC = Math.ceil(PAD / cs) + 3, extraR = 3;
+      const baseR = Math.floor(visRows / 2);
+      for (let r = -extraR - baseR; r < visRows + extraR - baseR; r++)for (let c = -extraC; c < COLS + extraC; c++) {
         const xo = ((r % 2) + 2) % 2 === 1 ? cs * 0.5 : 0;
         const so = r * skew * cs * 0.5;
         const x = PAD + c * cs + xo + so;
-        const y = PAD + (ROWS - 1 - r) * rs;
+        const y = H / 2 - r * rs;
         if (x < -cs * 2 || x > W + cs * 2 || y < -rs * 2 || y > H + rs * 2) continue;
         ns.push({ x, y, pitch: (((c % 12 + 12) % 12 * 7) + ((r % 3 + 3) % 3 * 4) + tc) % 12, col: c, row: r, id: r + "-" + c });
       } return ns;
@@ -653,17 +665,17 @@
       x.font = "bold " + Math.floor(sz * 0.82) + 'px "Noto Sans SC","Noto Sans JP","Noto Sans KR","Helvetica Neue",sans-serif';
       x.fillText(ch, sz / 2, sz / 2); return x.getImageData(0, 0, sz, sz);
     }
-    function drawBitmapFn(paths, w, h, sz, sc) {
-      const c = document.createElement("canvas"); c.width = sz; c.height = sz;
-      const x = c.getContext("2d"); x.fillStyle = "white"; x.fillRect(0, 0, sz, sz);
-      x.strokeStyle = "black"; x.lineWidth = Math.max(3 * (sz / Math.max(w, h)) / sc, 1.5); x.lineCap = "round"; x.lineJoin = "round";
-      x.save(); x.translate(sz / 2, sz / 2); x.scale(sc, sc); x.translate(-sz / 2, -sz / 2);
-      const sx = sz / w, sy = sz / h;
+    function drawBitmapFn(paths, w, h, bw, bh, sc) {
+      const c = document.createElement("canvas"); c.width = bw; c.height = bh;
+      const x = c.getContext("2d"); x.fillStyle = "white"; x.fillRect(0, 0, bw, bh);
+      x.strokeStyle = "black"; x.lineWidth = Math.max(3 * (Math.min(bw, bh) / Math.max(w, h)) / sc, 1.5); x.lineCap = "round"; x.lineJoin = "round";
+      x.save(); x.translate(bw / 2, bh / 2); x.scale(sc, sc); x.translate(-bw / 2, -bh / 2);
+      const sx = bw / w, sy = bh / h;
       paths.forEach(p => {
         if (p.length < 2) return; x.beginPath(); x.moveTo(p[0].x * sx, p[0].y * sy);
         for (let i = 1; i < p.length; i++) { const pv = p[i - 1], cu = p[i]; x.quadraticCurveTo(pv.x * sx, pv.y * sy, (pv.x + cu.x) / 2 * sx, (pv.y + cu.y) / 2 * sy); } x.stroke();
       });
-      x.restore(); return x.getImageData(0, 0, sz, sz);
+      x.restore(); return x.getImageData(0, 0, bw, bh);
     }
 
     function getSize() { return Math.max(W - PAD * 2, H - PAD * 2) * cSc(); }
@@ -676,22 +688,28 @@
       if (!hasType && !hasDraw) { aN = new Set(); return; }
       const act = new Set(), nodes = genNodes();
       const offs = [[0, 0], [-W, 0], [W, 0], [0, -H], [0, H], [-W, -H], [W, -H], [-W, H], [W, H]];
-      const sz = BMP, curSize = getSize(), pos = cPos(), rot = cRot();
+      const pos = cPos(), rot = cRot();
       const cosR = Math.cos(-rot), sinR = Math.sin(-rot);
-      let imgData;
-      if (hasType) imgData = charBitmap(typeCh, sz);
-      else if (hasDraw) imgData = drawBitmapFn(dPaths, W, H, sz, drawSc);
+      let imgData, szW, szH;
+      if (hasType) {
+        szW = szH = BMP_BASE;
+        imgData = charBitmap(typeCh, BMP_BASE);
+      } else if (hasDraw) {
+        szW = bmpW(); szH = bmpH();
+        imgData = drawBitmapFn(dPaths, W, H, szW, szH, drawSc);
+      }
       if (!imgData) { aN = new Set(); return; }
+      const curSize = getSize();
       nodes.forEach(nd => {
         for (const [ox, oy] of offs) {
           let dx = nd.x - (pos.x + ox), dy = nd.y - (pos.y + oy);
           const rx = dx * cosR - dy * sinR, ry = dx * sinR + dy * cosR;
           let nx, ny;
-          if (hasType) { nx = (rx / curSize + 0.5) * sz; ny = (ry / curSize + 0.5) * sz; }
-          else { nx = (rx / W + 0.5) * sz; ny = (ry / H + 0.5) * sz; }
+          if (hasType) { nx = (rx / curSize + 0.5) * szW; ny = (ry / curSize + 0.5) * szH; }
+          else { nx = (rx / W + 0.5) * szW; ny = (ry / H + 0.5) * szH; }
           for (let ddx = -2; ddx <= 2; ddx++)for (let ddy = -2; ddy <= 2; ddy++) {
             const px = Math.round(nx + ddx), py = Math.round(ny + ddy);
-            if (px >= 0 && px < sz && py >= 0 && py < sz && imgData.data[(py * sz + px) * 4] < 128) act.add(nd.id);
+            if (px >= 0 && px < szW && py >= 0 && py < szH && imgData.data[(py * szW + px) * 4] < 128) act.add(nd.id);
           }
         }
       });
@@ -838,11 +856,11 @@
       buildRow2(); buildSheetMode(); update();
     }
     function nudge() {
-      const nodes = genNodes(), sz = BMP, curSize = getSize(), rot = cRot();
+      const nodes = genNodes(), curSize = getSize(), rot = cRot();
       const isTyped = mode === "type" && !!typeCh, isDraw = mode === "draw" && dPaths.length > 0;
-      let imgData;
-      if (isTyped) imgData = charBitmap(typeCh, sz);
-      else if (isDraw) imgData = drawBitmapFn(dPaths, W, H, sz, drawSc);
+      let imgData, szW, szH;
+      if (isTyped) { szW = szH = BMP_BASE; imgData = charBitmap(typeCh, BMP_BASE); }
+      else if (isDraw) { szW = bmpW(); szH = bmpH(); imgData = drawBitmapFn(dPaths, W, H, szW, szH, drawSc); }
       if (!imgData) return;
       let best = null, bestScore = -1;
       const steps = 16, cx0 = W / 2, cy0 = H / 2, maxDist = Math.sqrt(cx0 * cx0 + cy0 * cy0);
@@ -856,10 +874,10 @@
             let dx = nd.x - (px + ox), dy = nd.y - (py + oy);
             const rx = dx * cosR - dy * sinR, ry = dx * sinR + dy * cosR;
             let nx2, ny2;
-            if (isTyped) { nx2 = (rx / curSize + 0.5) * sz; ny2 = (ry / curSize + 0.5) * sz; }
-            else { nx2 = (rx / W + 0.5) * sz; ny2 = (ry / H + 0.5) * sz; }
+            if (isTyped) { nx2 = (rx / curSize + 0.5) * szW; ny2 = (ry / curSize + 0.5) * szH; }
+            else { nx2 = (rx / W + 0.5) * szW; ny2 = (ry / H + 0.5) * szH; }
             const ppx = Math.round(nx2), ppy = Math.round(ny2);
-            if (ppx >= 0 && ppx < sz && ppy >= 0 && ppy < sz && imgData.data[(ppy * sz + ppx) * 4] < 128) count++;
+            if (ppx >= 0 && ppx < szW && ppy >= 0 && ppy < szH && imgData.data[(ppy * szW + ppx) * 4] < 128) count++;
           }
         });
         const dist = Math.sqrt((px - cx0) * (px - cx0) + (py - cy0) * (py - cy0));
@@ -927,29 +945,15 @@
         inp.addEventListener("compositionend", e => { isComposing = false; const v = e.target.value; if (v.length > 0) { typeCh = v.slice(-1); inp.value = typeCh; typePos = { x: W / 2, y: H / 2 }; toneRowOrder = null; update(); } });
         inp.addEventListener("input", e => { if (!isComposing) { const v = e.target.value; if (v.length > 0) { typeCh = v.slice(-1); inp.value = typeCh; typePos = { x: W / 2, y: H / 2 }; toneRowOrder = null; update(); } } });
         el.appendChild(inp);
-        const w2 = document.createElement("div"); w2.style.cssText = "display:flex;flex-direction:column;gap:8px;width:100%;align-items:center";
-        addMobileSlider(w2, "Size", "0.15", "1.8", "0.02", typeSc, function (v) { typeSc = v; showSc = true; clearTimeout(scTm); scTm = setTimeout(() => { showSc = false; render(); }, 800); update(); });
-        addMobileSlider(w2, "Tilt", "" + (-Math.PI), "" + Math.PI, "0.02", typeRot, function (v) { typeRot = v; showRot = true; clearTimeout(rotTm); rotTm = setTimeout(() => { showRot = false; render(); }, 800); update(); });
-        el.appendChild(w2);
+        /* size/tilt handled by two-finger pinch/rotate on canvas */
       } else {
         const bClr = document.createElement("button"); bClr.textContent = "\u2715"; bClr.onclick = () => { dPaths = []; curPath = null; locked = false; drawSc = 1.0; drawRot = 0; drawPos = { x: W / 2, y: H / 2 }; toneRowOrder = null; buildRow2(); buildSheetMode(); update(); };
         el.appendChild(bClr);
         const bLock = document.createElement("button"); bLock.textContent = locked ? "🔒" : "🔓"; bLock.className = locked ? "on" : "";
         bLock.onclick = () => { locked = !locked; cv.style.cursor = mode === "draw" && !locked ? "crosshair" : "grab"; buildRow2(); buildSheetMode(); update(); };
         el.appendChild(bLock);
-        if (locked) {
-          const w2 = document.createElement("div"); w2.style.cssText = "display:flex;flex-direction:column;gap:8px;width:100%;align-items:center";
-          addMobileSlider(w2, "Size", "0.3", "2.5", "0.02", drawSc, function (v) { drawSc = v; showSc = true; clearTimeout(scTm); scTm = setTimeout(() => { showSc = false; render(); }, 800); update(); });
-          addMobileSlider(w2, "Tilt", "" + (-Math.PI), "" + Math.PI, "0.02", drawRot, function (v) { drawRot = v; showRot = true; clearTimeout(rotTm); rotTm = setTimeout(() => { showRot = false; render(); }, 800); update(); });
-          el.appendChild(w2);
-        }
+        /* size/tilt handled by two-finger pinch/rotate on canvas */
       }
-    }
-    function addMobileSlider(parent, label, min, max, step, val, cb) {
-      const l = document.createElement("span"); l.className = "s-label"; l.textContent = label;
-      const s = document.createElement("input"); s.type = "range"; s.min = min; s.max = max; s.step = step; s.value = val;
-      s.oninput = function () { cb(parseFloat(this.value)); };
-      parent.append(l, s);
     }
 
     /* ── sheet toggle ── */
@@ -960,25 +964,86 @@
       canvasDisabled = sheetOpen;
     }
 
-    /* ── pointer ── */
-    function gcp(e) { const r = cv.getBoundingClientRect(); const x = e.touches ? e.touches[0].clientX : e.clientX; const y = e.touches ? e.touches[0].clientY : e.clientY; return { x: x - r.left, y: y - r.top }; }
-    cv.addEventListener("mousedown", pDown); cv.addEventListener("mousemove", pMove); cv.addEventListener("mouseup", pUp); cv.addEventListener("mouseleave", pUp);
-    cv.addEventListener("touchstart", pDown, { passive: false }); cv.addEventListener("touchmove", pMove, { passive: false }); cv.addEventListener("touchend", pUp);
+    /* ── pointer / multi-touch ── */
+    function gcp(e) { const r = cv.getBoundingClientRect(); const x = e.touches ? e.touches[0].clientX : e.clientX; const y = e.touches ? e.touches[0].clientY : e.clientY; return { x: (x - r.left) * (W / r.width), y: (y - r.top) * (H / r.height) }; }
+    function getTouches(e) {
+      const r = cv.getBoundingClientRect();
+      const ts = [];
+      for (let i = 0; i < e.touches.length; i++) {
+        ts.push({ x: (e.touches[i].clientX - r.left) * (W / r.width), y: (e.touches[i].clientY - r.top) * (H / r.height) });
+      }
+      return ts;
+    }
+    function touchDist(a, b) { return Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2); }
+    function touchAngle(a, b) { return Math.atan2(b.y - a.y, b.x - a.x); }
 
-    function pDown(e) {
-      if (canvasDisabled) return; e.preventDefault(); const p = gcp(e);
+    cv.addEventListener("mousedown", pDown); cv.addEventListener("mousemove", pMove); cv.addEventListener("mouseup", pUp); cv.addEventListener("mouseleave", pUp);
+    cv.addEventListener("touchstart", tDown, { passive: false }); cv.addEventListener("touchmove", tMove, { passive: false }); cv.addEventListener("touchend", tUp); cv.addEventListener("touchcancel", tUp);
+
+    function pDown(e) { if (canvasDisabled) return; e.preventDefault(); const p = gcp(e);
       if (mode === "draw" && !locked) { curPath = [p]; }
       else { dragging = true; const pos = cPos(); dragStart = { x: p.x - pos.x, y: p.y - pos.y }; }
     }
-    function pMove(e) {
-      if (canvasDisabled) return; e.preventDefault(); const p = gcp(e);
+    function pMove(e) { if (canvasDisabled) return; e.preventDefault(); const p = gcp(e);
       if (mode === "draw" && !locked && curPath) { curPath.push({ x: wrap(p.x, 0, W), y: wrap(p.y, 0, H) }); render(); }
       else if (dragging && dragStart) { setCPos({ x: wrap(p.x - dragStart.x, -W * 0.5, W * 1.5), y: wrap(p.y - dragStart.y, -H * 0.5, H * 1.5) }); update(); }
     }
-    function pUp() {
-      if (canvasDisabled) return;
+    function pUp() { if (canvasDisabled) return;
       if (mode === "draw" && !locked && curPath && curPath.length > 1) { dPaths.push(curPath); }
       curPath = null; dragging = false; dragStart = null; update();
+    }
+
+    /* touch handlers with 2-finger pinch/rotate */
+    function tDown(e) {
+      if (canvasDisabled) return; e.preventDefault();
+      const ts = getTouches(e);
+      if (ts.length === 2) {
+        /* start pinch/rotate */
+        pinchStartDist = touchDist(ts[0], ts[1]);
+        pinchStartSc = cSc();
+        pinchStartAngle = touchAngle(ts[0], ts[1]);
+        pinchStartRot = cRot();
+        dragging = false; curPath = null; /* cancel any single-finger action */
+      } else if (ts.length === 1) {
+        const p = ts[0];
+        if (mode === "draw" && !locked) { curPath = [p]; }
+        else { dragging = true; const pos = cPos(); dragStart = { x: p.x - pos.x, y: p.y - pos.y }; }
+      }
+    }
+    function tMove(e) {
+      if (canvasDisabled) return; e.preventDefault();
+      const ts = getTouches(e);
+      if (ts.length === 2 && pinchStartDist !== null) {
+        /* pinch = scale */
+        const dist = touchDist(ts[0], ts[1]);
+        const scaleRatio = dist / pinchStartDist;
+        let newSc = pinchStartSc * scaleRatio;
+        if (mode === "type") { newSc = Math.max(0.15, Math.min(1.8, newSc)); typeSc = newSc; }
+        else { newSc = Math.max(0.3, Math.min(2.5, newSc)); drawSc = newSc; }
+        showSc = true; clearTimeout(scTm); scTm = setTimeout(() => { showSc = false; render(); }, 800);
+        /* rotate */
+        const angle = touchAngle(ts[0], ts[1]);
+        let newRot = pinchStartRot + (angle - pinchStartAngle);
+        while (newRot > Math.PI) newRot -= Math.PI * 2;
+        while (newRot < -Math.PI) newRot += Math.PI * 2;
+        if (mode === "type") typeRot = newRot; else drawRot = newRot;
+        showRot = true; clearTimeout(rotTm); rotTm = setTimeout(() => { showRot = false; render(); }, 800);
+        update();
+      } else if (ts.length === 1 && pinchStartDist === null) {
+        const p = ts[0];
+        if (mode === "draw" && !locked && curPath) { curPath.push({ x: wrap(p.x, 0, W), y: wrap(p.y, 0, H) }); render(); }
+        else if (dragging && dragStart) { setCPos({ x: wrap(p.x - dragStart.x, -W * 0.5, W * 1.5), y: wrap(p.y - dragStart.y, -H * 0.5, H * 1.5) }); update(); }
+      }
+    }
+    function tUp(e) {
+      if (canvasDisabled) return;
+      if (e.touches.length < 2) { pinchStartDist = null; pinchStartAngle = null; }
+      if (e.touches.length === 0) {
+        if (mode === "draw" && !locked && curPath && curPath.length > 1) { dPaths.push(curPath); }
+        curPath = null; dragging = false; dragStart = null;
+        pinchStartDist = null; pinchStartAngle = null;
+        update();
+      }
     }
 
     /* ── resize ── */
@@ -989,7 +1054,9 @@
       const maxW = Math.min(rect.width - 50, 1000); /* 50 for density slider */
       W = maxW;
       H = isMobile ? Math.max(rect.height - 30, 180) : Math.min(W * 0.7, 560);
-      if (isMobile && density > 7) { density = 5;["densSlider", "densSliderM"].forEach(id => { const e = document.getElementById(id); if (e) e.value = 5; }); }
+      /* size density slider to match canvas height */
+      const ds = document.getElementById("densSlider");
+      if (ds) { ds.style.width = H + "px"; }
       cv.style.cursor = mode === "draw" && !locked ? "crosshair" : "grab";
       update();
     }
