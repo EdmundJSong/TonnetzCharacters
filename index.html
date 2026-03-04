@@ -67,7 +67,7 @@
 
     .drow2 {
       display: flex;
-      gap: 4px;
+      gap: 8px;
       padding: 3px 10px 4px;
       flex-wrap: wrap;
       justify-content: center;
@@ -260,7 +260,7 @@
       flex-direction: column;
       align-items: center;
       gap: 4px;
-      margin: 0 4px;
+      margin: 0 8px;
     }
 
     .knob {
@@ -353,7 +353,7 @@
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3)
     }
 
-    /* right density slider - vertical */
+    /* right density slider - custom vertical */
     .dens-slider-wrap {
       display: flex;
       flex-direction: column;
@@ -362,20 +362,30 @@
       padding: 0 2px;
       height: 100%;
       width: 32px;
-      flex-shrink: 0
+      flex-shrink: 0;
+      cursor: ns-resize;
+      touch-action: none
     }
 
-    .dens-slider-wrap input[type=range] {
-      width: 100%;
-      max-width: 400px;
-      transform: rotate(-90deg);
-      transform-origin: center center;
-      accent-color: #d4912a;
-      cursor: pointer;
-      touch-action: manipulation;
-      -webkit-appearance: none;
-      appearance: none;
-      background: transparent
+    .dens-track {
+      width: 4px;
+      height: 100%;
+      max-height: 400px;
+      background: #2a2a2a;
+      border-radius: 2px;
+      position: relative
+    }
+
+    .dens-thumb {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #d4912a;
+      box-shadow: 0 0 8px rgba(212, 145, 42, 0.4);
+      position: absolute;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none
     }
 
     /* bottom skew slider */
@@ -585,8 +595,8 @@
         padding: 3px 7px
       }
 
-      .dens-slider-wrap input[type=range] {
-        max-width: 250px
+      .dens-track {
+        max-height: 250px
       }
 
       .skew-slider-wrap {
@@ -666,8 +676,9 @@
     <div class="canvas-row">
       <canvas id="cv"></canvas>
       <div class="dens-slider-wrap" id="densWrap">
-        <input type="range" id="densSlider" min="4" max="14" step="1" value="9"
-          oninput="setDensity(parseInt(this.value))">
+        <div class="dens-track" id="densTrack">
+          <div class="dens-thumb" id="densThumb"></div>
+        </div>
       </div>
     </div>
     <div class="skew-slider-wrap">
@@ -758,7 +769,7 @@
     const GRID_COL = "rgba(42,31,20,0.22)", NODE_IN = "rgba(42,31,20,0.7)";
 
     const cv = document.getElementById("cv"), ctx = cv.getContext("2d");
-    const PAD = 30, BMP_BASE = 220;
+    const PAD = 30, BMP_BASE = 440;
 
     /* SVGs */
     const svgPlay = `<svg class="svg-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`;
@@ -986,6 +997,7 @@
 
       renderToneRow(nodes);
       updatePlayBtns();
+      updateDensThumb();
     }
 
     function renderToneRow(nodes) {
@@ -1016,6 +1028,35 @@
     }
     function update() { detect(); render(); }
 
+    /* ── custom density slider ── */
+    function updateDensThumb() {
+      const track = document.getElementById("densTrack");
+      const thumb = document.getElementById("densThumb");
+      if (!track || !thumb) return;
+      const pct = (density - 4) / (14 - 4);
+      const th = track.getBoundingClientRect().height;
+      thumb.style.top = (1 - pct) * th + "px";
+    }
+    (function initDensSlider() {
+      const wrap = document.getElementById("densWrap");
+      const track = document.getElementById("densTrack");
+      if (!wrap || !track) return;
+      let active = false;
+      function onMove(clientY) {
+        const rect = track.getBoundingClientRect();
+        let pct = 1 - (clientY - rect.top) / rect.height;
+        pct = Math.max(0, Math.min(1, pct));
+        const v = Math.round(4 + pct * 10);
+        if (v !== density) setDensity(v);
+      }
+      wrap.addEventListener("mousedown", e => { active = true; onMove(e.clientY); e.preventDefault(); });
+      window.addEventListener("mousemove", e => { if (active) onMove(e.clientY); });
+      window.addEventListener("mouseup", () => { active = false; });
+      wrap.addEventListener("touchstart", e => { active = true; onMove(e.touches[0].clientY); e.preventDefault(); }, { passive: false });
+      window.addEventListener("touchmove", e => { if (active) { onMove(e.touches[0].clientY); e.preventDefault(); } }, { passive: false });
+      window.addEventListener("touchend", () => { active = false; });
+    })();
+
     /* ── controls ── */
     function setMode(m) {
       mode = m;
@@ -1043,7 +1084,9 @@
       showSkew = true; clearTimeout(skTm); skTm = setTimeout(() => { showSkew = false; render(); }, 800); update();
     }
     function setDensity(v) {
-      density = v;["densSlider", "densSliderM"].forEach(id => { const e = document.getElementById(id); if (e) e.value = v; }); update();
+      density = v;
+      const dm = document.getElementById("densSliderM"); if (dm) dm.value = v;
+      update();
     }
     function cycleWave() {
       waveIdx = (waveIdx + 1) % WAVES.length;
@@ -1328,9 +1371,9 @@
       const maxW = Math.min(rect.width - 50, 1000); /* 50 for density slider */
       W = maxW;
       H = isMobile ? Math.max(rect.height - 30, 180) : Math.min(W * 0.7, 560);
-      /* size density slider to match canvas height */
-      const ds = document.getElementById("densSlider");
-      if (ds) { ds.style.width = H + "px"; }
+      /* size density track to match canvas height */
+      const dt = document.getElementById("densTrack");
+      if (dt) { dt.style.height = H + "px"; }
       cv.style.cursor = mode === "draw" && !locked ? "crosshair" : "grab";
       update();
     }
