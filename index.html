@@ -526,7 +526,13 @@
       }
 
       .skew-slider-wrap {
-        padding: 2px 16px 0
+        padding: 12px 16px
+      }
+
+      input[type=range]::-webkit-slider-thumb {
+        width: 24px;
+        height: 24px;
+        margin-top: -10px;
       }
     }
   </style>
@@ -664,8 +670,13 @@
       const cs = uw / Math.max(COLS - 1, 1);
       const rs = cs * Math.sqrt(3) / 2; /* equilateral triangles */
       const visRows = Math.ceil((H + PAD * 2) / rs) + 2;
-      const extraC = Math.ceil(PAD / cs) + 3, extraR = 3;
       const baseR = Math.floor(visRows / 2);
+      const extraR = 3;
+
+      /* expand horizontal bounds based on the max possible skew deflection */
+      const extraSkewC = Math.ceil(((visRows + extraR * 2) / 2) * Math.abs(skew) * 0.5);
+      const extraC = Math.ceil(PAD / cs) + 3 + extraSkewC;
+
       for (let r = -extraR - baseR; r < visRows + extraR - baseR; r++)for (let c = -extraC; c < COLS + extraC; c++) {
         const xo = ((r % 2) + 2) % 2 === 1 ? cs * 0.5 : 0;
         const so = r * skew * cs * 0.5;
