@@ -254,6 +254,70 @@
       text-transform: lowercase
     }
 
+    /* knob component */
+    .knob-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      margin: 0 4px;
+    }
+
+    .knob {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #2a2a2a, #141414);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5), inset 0 1px 2px rgba(255, 255, 255, 0.05);
+      position: relative;
+      cursor: ns-resize;
+      touch-action: none;
+    }
+
+    .knob-indicator {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 2px;
+      height: 12px;
+      background: #d4912a;
+      transform-origin: 50% 0;
+      border-radius: 1px;
+      box-shadow: 0 0 4px rgba(212, 145, 42, 0.5);
+    }
+
+    .knob-lbl {
+      font-size: 9px;
+      color: #706860;
+      letter-spacing: 0.08em;
+      text-transform: lowercase
+    }
+
+    /* animations */
+    @keyframes slideUpFade {
+      from {
+        opacity: 0;
+        transform: translateY(4px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .panel-anim {
+      animation: slideUpFade 0.2s ease-out forwards;
+    }
+
+    .svg-icon {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
+      display: block;
+    }
+
     /* canvas area with spatial sliders */
     .canvas-area {
       width: 100%;
@@ -546,22 +610,50 @@
   <div class="drow" id="drow1">
     <div class="panel">
       <div class="grp">
-        <button id="mType" class="on" onclick="setMode('type')" data-tip="Type Mode">T</button>
-        <button id="mDraw" onclick="setMode('draw')" data-tip="Draw Mode">&#x270E;</button>
+        <button id="mType" class="on" onclick="setMode('type')" data-tip="Type Mode">
+          <svg class="svg-icon" viewBox="0 0 24 24" style="width:18px;height:18px">
+            <path d="M2.5 4v3h5v12h3V7h5V4h-13zm19 5h-9v3h3v7h3v-7h3V9z" />
+          </svg>
+        </button>
+        <button id="mDraw" onclick="setMode('draw')" data-tip="Draw Mode">
+          <svg class="svg-icon" viewBox="0 0 24 24" style="width:16px;height:16px">
+            <path
+              d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
+          </svg>
+        </button>
       </div>
       <select id="tcSel" onchange="setTc(parseInt(this.value))"></select>
       <button id="pcBtn" onclick="togglePc()">#</button>
     </div>
 
     <div class="panel">
-      <button onclick="resetView()" data-tip="Reset View">&#x21BA;</button>
-      <button onclick="nudge()" data-tip="Optimize Layout">&#x2AF1;</button>
+      <button onclick="resetView()" data-tip="Reset View">
+        <svg class="svg-icon" viewBox="0 0 24 24">
+          <path
+            d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z" />
+        </svg>
+      </button>
+      <button onclick="nudge()" data-tip="Optimize Layout">
+        <svg class="svg-icon" viewBox="0 0 24 24">
+          <path
+            d="M15 3l2.3 2.3-2.89 2.87 1.42 1.42L18.7 6.7 21 9V3zM3 9l2.3-2.3 2.87 2.89 1.42-1.42L6.7 5.3 9 3H3zm6 12l-2.3-2.3 2.89-2.87-1.42-1.42L5.3 17.3 3 15v6zm12-6l-2.3 2.3-2.87-2.89-1.42 1.42 2.89 2.87L15 21h6z" />
+        </svg>
+      </button>
     </div>
 
     <div class="panel">
       <div class="grp">
-        <button id="waveBtn" onclick="cycleWave()" data-tip="Cycle Waveform">&#x223F;</button>
-        <button id="playBtn" onclick="doPlay()" data-tip="Play sequence">&#x25B6;</button>
+        <button id="waveBtn" onclick="cycleWave()" data-tip="Cycle Waveform">
+          <svg class="svg-icon" viewBox="0 0 24 24">
+            <path
+              d="M12 4c-4.41 0-8 3.59-8 8s3.59 8 8 8 8-3.59 8-8-3.59-8-8-8zm0 14c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6z" />
+          </svg>
+        </button>
+        <button id="playBtn" onclick="doPlay()" data-tip="Play sequence">
+          <svg class="svg-icon" viewBox="0 0 24 24">
+            <path d="M8 5v14l11-7z" />
+          </svg>
+        </button>
       </div>
     </div>
   </div>
@@ -588,14 +680,27 @@
 
   <!-- Mobile -->
   <button class="fab" id="fab" onclick="toggleSheet()">&#x2699;</button>
-  <button class="fab-clear" id="fabClear" onclick="clearDraw()">&#x2715;</button>
+  <button class="fab-clear" id="fabClear" onclick="clearDraw()">
+    <svg class="svg-icon" viewBox="0 0 24 24">
+      <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+    </svg>
+  </button>
   <div class="overlay" id="overlay" onclick="toggleSheet()"></div>
   <div class="sheet" id="sheet">
     <div class="sheet-handle"></div>
     <div class="s-row">
       <div class="grp">
-        <button id="mTypeM" class="on" onclick="setMode('type')">T</button>
-        <button id="mDrawM" onclick="setMode('draw')">&#x270E;</button>
+        <button id="mTypeM" class="on" onclick="setMode('type')">
+          <svg class="svg-icon" viewBox="0 0 24 24" style="width:18px;height:18px">
+            <path d="M2.5 4v3h5v12h3V7h5V4h-13zm19 5h-9v3h3v7h3v-7h3V9z" />
+          </svg>
+        </button>
+        <button id="mDrawM" onclick="setMode('draw')">
+          <svg class="svg-icon" viewBox="0 0 24 24" style="width:16px;height:16px">
+            <path
+              d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
+          </svg>
+        </button>
       </div>
     </div>
     <div class="s-row" id="sheetMode"></div>
@@ -604,8 +709,18 @@
     </div>
     <div class="s-row">
       <button id="pcBtnM" onclick="togglePc()">#</button>
-      <button onclick="resetView()">&#x21BA;</button>
-      <button onclick="nudge()">&#x2AF1;</button>
+      <button onclick="resetView()">
+        <svg class="svg-icon" viewBox="0 0 24 24">
+          <path
+            d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z" />
+        </svg>
+      </button>
+      <button onclick="nudge()">
+        <svg class="svg-icon" viewBox="0 0 24 24">
+          <path
+            d="M15 3l2.3 2.3-2.89 2.87 1.42 1.42L18.7 6.7 21 9V3zM3 9l2.3-2.3 2.87 2.89 1.42-1.42L6.7 5.3 9 3H3zm6 12l-2.3-2.3 2.89-2.87-1.42-1.42L5.3 17.3 3 15v6zm12-6l-2.3 2.3-2.87-2.89-1.42 1.42 2.89 2.87L15 21h6z" />
+        </svg>
+      </button>
     </div>
     <div class="s-row">
       <span class="s-label">Density</span>
@@ -619,8 +734,17 @@
     </div>
     <div class="s-row">
       <div class="grp">
-        <button id="waveBtnM" onclick="cycleWave()">&#x223F;</button>
-        <button id="playBtnM" onclick="doPlay()">&#x25B6;</button>
+        <button id="waveBtnM" onclick="cycleWave()">
+          <svg class="svg-icon" viewBox="0 0 24 24">
+            <path
+              d="M12 4c-4.41 0-8 3.59-8 8s3.59 8 8 8 8-3.59 8-8-3.59-8-8-8zm0 14c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6z" />
+          </svg>
+        </button>
+        <button id="playBtnM" onclick="doPlay()">
+          <svg class="svg-icon" viewBox="0 0 24 24">
+            <path d="M8 5v14l11-7z" />
+          </svg>
+        </button>
       </div>
     </div>
   </div>
@@ -633,8 +757,16 @@
     const PAPER = "#f0eadc", AMBER = "#d4912a", AMBER_GLOW = "rgba(212,145,42,0.15)", INK = "#2a1f14", INK3 = "#9a8a78";
     const GRID_COL = "rgba(42,31,20,0.22)", NODE_IN = "rgba(42,31,20,0.7)";
 
-    const cv = document.getElementById("cv"), ctx = cv.getContext("2d");
     const PAD = 30, BMP_BASE = 220;
+
+    /* SVGs */
+    const svgPlay = `<svg class="svg-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`;
+    const svgReset = `<svg class="svg-icon" viewBox="0 0 24 24"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>`;
+    const svgNudge = `<svg class="svg-icon" viewBox="0 0 24 24"><path d="M15 3l2.3 2.3-2.89 2.87 1.42 1.42L18.7 6.7 21 9V3zM3 9l2.3-2.3 2.87 2.89 1.42-1.42L6.7 5.3 9 3H3zm6 12l-2.3-2.3 2.89-2.87-1.42-1.42L5.3 17.3 3 15v6zm12-6l-2.3 2.3-2.87-2.89-1.42 1.42 2.89 2.87L15 21h6z"/></svg>`;
+    const svgType = `<svg class="svg-icon" viewBox="0 0 24 24" style="width:18px;height:18px"><path d="M2.5 4v3h5v12h3V7h5V4h-13zm19 5h-9v3h3v7h3v-7h3V9z"/></svg>`;
+    const svgDraw = `<svg class="svg-icon" viewBox="0 0 24 24" style="width:16px;height:16px"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>`;
+    const svgClear = `<svg class="svg-icon" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>`;
+    const svgWave1 = `<svg class="svg-icon" viewBox="0 0 24 24"><path d="M12 4c-4.41 0-8 3.59-8 8s3.59 8 8 8 8-3.59 8-8-3.59-8-8-8zm0 14c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6z"/></svg>`;
 
     /* aspect-ratio-aware bitmap dimensions */
     function bmpW() { return W >= H ? BMP_BASE : Math.round(BMP_BASE * W / H); }
@@ -648,6 +780,7 @@
     let dragging = false, dragStart = null;
     let showRot = false, showSc = false, showSkew = false;
     let rotTm, scTm, skTm;
+    let activePitch = null;
     let isComposing = false;
     let sheetOpen = false;
     let toneRowOrder = null;
@@ -811,7 +944,14 @@
 
       nodes.forEach(nd => {
         const isA = aN.has(nd.id), lb = lbl(nd.pitch);
-        if (isA) {
+        const isActivePlay = (activePitch !== null && nd.pitch === activePitch && isA);
+
+        if (isActivePlay) {
+          ctx.beginPath(); ctx.arc(nd.x, nd.y, nr + 8, 0, Math.PI * 2); ctx.fillStyle = "rgba(255, 255, 255, 0.4)"; ctx.fill();
+          ctx.beginPath(); ctx.arc(nd.x, nd.y, nr, 0, Math.PI * 2); ctx.fillStyle = "#fff"; ctx.fill();
+          ctx.fillStyle = "#000"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+          ctx.font = 'bold ' + Math.floor(nr * 0.75) + 'px "SF Mono","Fira Code","Courier New",monospace'; ctx.fillText(lb, nd.x, nd.y);
+        } else if (isA) {
           ctx.beginPath(); ctx.arc(nd.x, nd.y, nr + 5, 0, Math.PI * 2); ctx.fillStyle = AMBER_GLOW; ctx.fill();
           ctx.beginPath(); ctx.arc(nd.x, nd.y, nr, 0, Math.PI * 2); ctx.fillStyle = AMBER; ctx.fill();
           ctx.fillStyle = "#fff"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
@@ -822,6 +962,17 @@
           ctx.font = Math.floor(nr * 0.7) + 'px "SF Mono","Fira Code","Courier New",monospace'; ctx.fillText(lb, nd.x, nd.y);
         }
       });
+
+      /* empty state hint */
+      if (aN.size === 0 && !typeCh && dPaths.length === 0 && !curPath) {
+        ctx.save();
+        ctx.fillStyle = "rgba(180, 168, 148, 0.4)";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.font = '16px "Inter", sans-serif';
+        ctx.fillText("Type a character or switch to Draw mode to begin.", W / 2, H / 2 + 60);
+        ctx.restore();
+      }
 
       /* floating indicators */
       ctx.save(); ctx.textAlign = "center"; ctx.textBaseline = "middle";
@@ -895,7 +1046,7 @@
     }
     function cycleWave() {
       waveIdx = (waveIdx + 1) % WAVES.length;
-      ["waveBtn", "waveBtnM"].forEach(id => { const e = document.getElementById(id); if (e) e.textContent = WAVES[waveIdx][1]; });
+      /* the text version doesn't exist anymore for waveform, we just rely on audio */
     }
     function resetView() {
       if (mode === "type") { typePos = { x: W / 2, y: H / 2 }; typeSc = 0.45; typeRot = 0; }
@@ -948,14 +1099,27 @@
       const now = Tone.now(), sp = 0.3;
       ordered.forEach((pitch, i) => {
         const oct = 3 + Math.floor(i / 6);
-        try { synth.triggerAttackRelease(P_SYN[pitch] + oct, "4n", now + i * sp); } catch (e) { }
+        try {
+          synth.triggerAttackRelease(P_SYN[pitch] + oct, "4n", now + i * sp);
+          Tone.Draw.schedule(() => {
+            activePitch = pitch;
+            render();
+          }, now + i * sp);
+        } catch (e) { }
       });
-      setTimeout(() => { playing = false; render(); }, ordered.length * sp * 1000 + 500);
+      Tone.Draw.schedule(() => {
+        activePitch = null;
+        playing = false;
+        render();
+      }, now + ordered.length * sp + 0.5);
     }
 
     /* ── desktop row 2 ── */
     function buildRow2() {
-      const r2 = document.getElementById("drow2"); r2.innerHTML = "";
+      const r2 = document.getElementById("drow2");
+      r2.innerHTML = "";
+      r2.className = "drow2 panel-anim"; // smooth entrance
+
       if (mode === "type") {
         const inp = document.createElement("input"); inp.type = "text"; inp.id = "charInput"; inp.value = typeCh; inp.placeholder = ""; inp.autocomplete = "off";
         inp.addEventListener("compositionstart", () => { isComposing = true; });
@@ -963,19 +1127,73 @@
         inp.addEventListener("input", e => { if (!isComposing) { const v = e.target.value; if (v.length > 0) { typeCh = v.slice(-1); inp.value = typeCh; typePos = { x: W / 2, y: H / 2 }; toneRowOrder = null; update(); } } });
         r2.appendChild(inp);
         addLabeledSlider(r2, "size", "0.15", "1.8", "0.02", typeSc, function (v) { typeSc = v; showSc = true; clearTimeout(scTm); scTm = setTimeout(() => { showSc = false; render(); }, 800); update(); });
-        addLabeledSlider(r2, "tilt", "" + (-Math.PI), "" + Math.PI, "0.02", typeRot, function (v) { typeRot = v; showRot = true; clearTimeout(rotTm); rotTm = setTimeout(() => { showRot = false; render(); }, 800); update(); });
+        addKnob(r2, "tilt", typeRot, function (v) { typeRot = v; showRot = true; clearTimeout(rotTm); rotTm = setTimeout(() => { showRot = false; render(); }, 800); update(); });
       } else {
-        const bClr = document.createElement("button"); bClr.textContent = "\u2715"; bClr.onclick = () => { dPaths = []; curPath = null; locked = false; drawSc = 1.0; drawRot = 0; drawPos = { x: W / 2, y: H / 2 }; toneRowOrder = null; buildRow2(); update(); };
+        const bClr = document.createElement("button"); bClr.innerHTML = svgClear; bClr.onclick = () => { clearDraw(); };
         r2.appendChild(bClr);
         const bLock = document.createElement("button"); bLock.textContent = locked ? "🔒" : "🔓"; bLock.className = locked ? "on" : "";
         bLock.onclick = () => { locked = !locked; cv.style.cursor = mode === "draw" && !locked ? "crosshair" : "grab"; buildRow2(); buildSheetMode(); update(); };
         r2.appendChild(bLock);
         if (locked) {
           addLabeledSlider(r2, "size", "0.3", "2.5", "0.02", drawSc, function (v) { drawSc = v; showSc = true; clearTimeout(scTm); scTm = setTimeout(() => { showSc = false; render(); }, 800); update(); });
-          addLabeledSlider(r2, "tilt", "" + (-Math.PI), "" + Math.PI, "0.02", drawRot, function (v) { drawRot = v; showRot = true; clearTimeout(rotTm); rotTm = setTimeout(() => { showRot = false; render(); }, 800); update(); });
+          addKnob(r2, "tilt", drawRot, function (v) { drawRot = v; showRot = true; clearTimeout(rotTm); rotTm = setTimeout(() => { showRot = false; render(); }, 800); update(); });
         }
       }
     }
+
+    function addKnob(parent, label, val, cb) {
+      const w = document.createElement("div"); w.className = "knob-wrap";
+      const k = document.createElement("div"); k.className = "knob";
+      const ind = document.createElement("div"); ind.className = "knob-indicator";
+
+      // Setup initial rotation
+      ind.style.transform = `translate(-50%, -50%) rotate(${val}rad) translateY(-8px)`;
+      k.appendChild(ind);
+
+      let isDragging = false;
+      let startY = 0;
+      let startVal = val;
+
+      const onMove = (e) => {
+        if (!isDragging) return;
+        const cy = e.touches ? e.touches[0].clientY : e.clientY;
+        const deltaY = startY - cy;
+        let newVal = startVal + (deltaY * 0.02); // sensitivity
+        // Wrap between -PI and PI
+        while (newVal > Math.PI) newVal -= Math.PI * 2;
+        while (newVal < -Math.PI) newVal += Math.PI * 2;
+
+        ind.style.transform = `translate(-50%, -50%) rotate(${newVal}rad) translateY(-8px)`;
+        cb(newVal);
+      };
+
+      const onUp = () => {
+        isDragging = false;
+        document.removeEventListener("mousemove", onMove);
+        document.removeEventListener("touchmove", onMove);
+        document.removeEventListener("mouseup", onUp);
+        document.removeEventListener("touchend", onUp);
+      };
+
+      const onDown = (e) => {
+        e.preventDefault();
+        isDragging = true;
+        startY = e.touches ? e.touches[0].clientY : e.clientY;
+        // current value could have changed externally, so we need to track it via getter or trust callback flow
+        startVal = mode === "type" ? typeRot : drawRot;
+        document.addEventListener("mousemove", onMove);
+        document.addEventListener("touchmove", onMove, { passive: false });
+        document.addEventListener("mouseup", onUp);
+        document.addEventListener("touchend", onUp);
+      };
+
+      k.addEventListener("mousedown", onDown);
+      k.addEventListener("touchstart", onDown, { passive: false });
+
+      const l = document.createElement("span"); l.className = "knob-lbl"; l.textContent = label;
+      w.append(k, l); parent.appendChild(w);
+    }
+
     function addLabeledSlider(parent, label, min, max, step, val, cb) {
       const w = document.createElement("div"); w.className = "sld-wrap";
       const s = document.createElement("input"); s.type = "range"; s.min = min; s.max = max; s.step = step; s.value = val;
