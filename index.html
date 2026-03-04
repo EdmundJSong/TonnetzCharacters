@@ -757,6 +757,7 @@
     const PAPER = "#f0eadc", AMBER = "#d4912a", AMBER_GLOW = "rgba(212,145,42,0.15)", INK = "#2a1f14", INK3 = "#9a8a78";
     const GRID_COL = "rgba(42,31,20,0.22)", NODE_IN = "rgba(42,31,20,0.7)";
 
+    const cv = document.getElementById("cv"), ctx = cv.getContext("2d");
     const PAD = 30, BMP_BASE = 220;
 
     /* SVGs */
@@ -1046,7 +1047,11 @@
     }
     function cycleWave() {
       waveIdx = (waveIdx + 1) % WAVES.length;
-      /* the text version doesn't exist anymore for waveform, we just rely on audio */
+      const sym = WAVES[waveIdx][1];
+      ["waveBtn", "waveBtnM"].forEach(id => {
+        const e = document.getElementById(id);
+        if (e) { e.setAttribute("data-tip", WAVES[waveIdx][0]); e.textContent = sym; }
+      });
     }
     function resetView() {
       if (mode === "type") { typePos = { x: W / 2, y: H / 2 }; typeSc = 0.45; typeRot = 0; }
@@ -1253,7 +1258,7 @@
     }
     function pMove(e) {
       if (canvasDisabled) return; e.preventDefault(); const p = gcp(e);
-      if (mode === "draw" && !locked && curPath) { curPath.push(p); render(); }
+      if (mode === "draw" && !locked && curPath) { curPath.push({ x: wrap(p.x, 0, W), y: wrap(p.y, 0, H) }); render(); }
       else if (dragging && dragStart) { setCPos({ x: wrap(p.x - dragStart.x, -W * 0.5, W * 1.5), y: wrap(p.y - dragStart.y, -H * 0.5, H * 1.5) }); update(); }
     }
     function pUp() {
@@ -1300,7 +1305,7 @@
         update();
       } else if (ts.length === 1 && pinchStartDist === null) {
         const p = ts[0];
-        if (mode === "draw" && !locked && curPath) { curPath.push(p); render(); }
+        if (mode === "draw" && !locked && curPath) { curPath.push({ x: wrap(p.x, 0, W), y: wrap(p.y, 0, H) }); render(); }
         else if (dragging && dragStart) { setCPos({ x: wrap(p.x - dragStart.x, -W * 0.5, W * 1.5), y: wrap(p.y - dragStart.y, -H * 0.5, H * 1.5) }); update(); }
       }
     }
